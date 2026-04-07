@@ -2,7 +2,7 @@
   "name": "Ana Hyrox Coach",
   "short_name": "Hyrox",
   "description": "Hyrox training, nutrition and recovery tracker",
-  "start_url": "/",
+  "start_url": "/fortaleza-tracker/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
