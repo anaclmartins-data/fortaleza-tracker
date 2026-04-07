@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Hyrox">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1a18" media="(prefers-color-scheme: dark)">
+  <title>Ana Hyrox Coach</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- TODAY -->
+  <div id="today" class="section active">
+    <p class="section-heading" id="today-heading">Today</p>
+    <p class="section-sub" id="today-date"></p>
+    <div id="today-alerts"></div>
+    <div class="card">
+      <div class="card-title">Session</div>
+      <div id="today-workout"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Macros</div>
+      <div id="macro-type-badge"></div>
+      <div id="today-macros"></div>
+    </div>
+  </div>
+
+  <!-- FOOD -->
+  <div id="food" class="section">
+    <p class="section-heading">Food</p>
+    <p class="section-sub" id="food-date-label"></p>
+    <div class="card"><div class="card-title">Daily totals</div><div id="food-totals"></div></div>
+    <div class="card">
+      <div class="card-title">Quick add</div>
+      <div class="quick-add-grid" id="quick-add-grid"></div>
+      <button class="btn-small" onclick="toggleCustomFood()" style="width:100%;">+ Custom food</button>
+      <div id="custom-food-form" style="display:none;margin-top:12px;">
+        <div class="metric-grid" style="margin-bottom:8px;">
+          <div class="metric" style="grid-column:1/-1;"><label>Food name</label><input type="text" id="cf-name" placeholder="e.g. Chicken breast"></div>
+          <div class="metric"><label>Protein (g)</label><input type="number" id="cf-p" placeholder="0"></div>
+          <div class="metric"><label>Carbs (g)</label><input type="number" id="cf-c" placeholder="0"></div>
+          <div class="metric"><label>Fat (g)</label><input type="number" id="cf-f" placeholder="0"></div>
+          <div class="metric"><label>Meal</label>
+            <select id="cf-meal" style="font-size:13px;font-family:inherit;">
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="snack">Snack</option>
+              <option value="dinner">Dinner</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addCustomFood()">Add food</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Today's log</div><div id="food-log"></div></div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div id="workout" class="section">
+    <p class="section-heading">Workout log</p>
+    <p class="section-sub" id="workout-date-label"></p>
+    <div class="card">
+      <div class="card-title">Log results</div>
+      <div id="station-inputs"></div>
+      <button class="btn-primary" onclick="saveWorkout()">Save session</button>
+    </div>
+    <div class="card"><div class="card-title">Recent sessions</div><div id="workout-history"></div></div>
+  </div>
+
+  <!-- CHECK-IN -->
+  <div id="checkin" class="section">
+    <p class="section-heading">Daily check-in</p>
+    <p class="section-sub">~60 seconds</p>
+    <div class="card">
+      <div class="card-title">Body & recovery</div>
+      <div class="metric-grid">
+        <div class="metric"><label>Weight (kg)</label><input type="number" id="ci-weight" step="0.1" placeholder="62.9"></div>
+        <div class="metric"><label>Cycle day</label><input type="number" id="ci-cycle" min="1" max="35" placeholder="1"></div>
+        <div class="metric"><label>HRV (ms)</label><input type="number" id="ci-hrv" placeholder="69"></div>
+        <div class="metric"><label>RHR (bpm)</label><input type="number" id="ci-rhr" placeholder="48"></div>
+        <div class="metric"><label>Body Battery</label><input type="number" id="ci-bb" min="0" max="100" placeholder="96"></div>
+        <div class="metric"><label>Stress score</label><input type="number" id="ci-stress" placeholder="19"></div>
+        <div class="metric"><label>Sleep score</label><input type="number" id="ci-sleep" placeholder="78"></div>
+        <div class="metric"><label>Deep sleep (%)</label><input type="number" id="ci-deep" placeholder="20"></div>
+      </div>
+      <div class="slider-row">
+        <label>Steps</label>
+        <input type="range" id="ci-steps" min="2000" max="20000" step="500" value="8000" oninput="document.getElementById('steps-val').textContent=Math.round(this.value/500)*500>=1000?(Math.round(this.value/500)*500/1000).toFixed(1)+'k':this.value">
+        <span class="slider-val" id="steps-val">8k</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">How do you feel?</div>
+      <div class="slider-row">
+        <label>Energy</label>
+        <input type="range" id="ci-energy" min="1" max="10" step="1" value="7" oninput="document.getElementById('energy-val').textContent=this.value">
+        <span class="slider-val" id="energy-val">7</span>
+      </div>
+      <div class="slider-row">
+        <label>Hunger</label>
+        <input type="range" id="ci-hunger" min="1" max="10" step="1" value="5" oninput="document.getElementById('hunger-val').textContent=this.value">
+        <span class="slider-val" id="hunger-val">5</span>
+      </div>
+      <div style="margin-top:4px;">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Training performance</p>
+        <div class="perf-btns">
+          <button class="perf-btn" id="perf-pr" onclick="selectPerf('pr')">PR</button>
+          <button class="perf-btn selected" id="perf-normal" onclick="selectPerf('normal')">Normal</button>
+          <button class="perf-btn" id="perf-below" onclick="selectPerf('below')">Below par</button>
+          <button class="perf-btn" id="perf-rest" onclick="selectPerf('rest')">Rest day</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveCheckin()">Save check-in</button>
+  </div>
+
+  <!-- WEEKLY -->
+  <div id="weekly" class="section">
+    <p class="section-heading">Weekly review</p>
+    <p class="section-sub" id="weekly-sub"></p>
+    <div id="weekly-summary"></div>
+    <div class="card">
+      <div class="card-title">Measurements (cm)</div>
+      <div class="measurements-grid">
+        <div class="meas-item"><label>Waist</label><input type="number" id="m-waist" step="0.5" placeholder="70"></div>
+        <div class="meas-item"><label>Thigh</label><input type="number" id="m-thigh" step="0.5" placeholder="55"></div>
+        <div class="meas-item"><label>Glutes</label><input type="number" id="m-glutes" step="0.5" placeholder="96"></div>
+        <div class="meas-item"><label>Arm</label><input type="number" id="m-arm" step="0.5" placeholder="28"></div>
+      </div>
+    </div>
+    <div id="algorithm-recommendation"></div>
+    <button class="btn-primary" onclick="saveWeekly()">Confirm & save</button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="progress" class="section">
+    <p class="section-heading">Progress</p>
+    <p class="section-sub">Trends over time</p>
+    <div class="metric-grid" style="margin-bottom:1rem;">
+      <div class="metric"><label>7-day avg weight</label><div class="stat-num" id="prog-weight">—</div><div class="stat-label">kg</div></div>
+      <div class="metric"><label>4-week change</label><div class="stat-num" id="prog-change">—</div><div class="stat-label">kg</div></div>
+    </div>
+    <div class="card"><div class="card-title">Weight trend</div><canvas id="weight-chart" height="120"></canvas></div>
+    <div class="card"><div class="card-title">Station PBs</div><div id="station-pbs"></div></div>
+    <div class="card"><div class="card-title">Measurements</div><div id="meas-history"></div></div>
+    <div class="card"><div class="card-title">Algorithm status</div><div id="algo-status"></div></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settings" class="section">
+    <p class="section-heading">Settings</p>
+    <p class="section-sub">Sync & data</p>
+    <div class="card">
+      <div class="card-title">Google Sheets sync</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Paste your Apps Script web app URL here to sync data automatically.</p>
+      <input type="text" id="sheets-url-input" placeholder="https://script.google.com/macros/s/..." style="width:100%;padding:10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text);outline:none;font-family:inherit;margin-bottom:8px;">
+      <button class="btn-primary" onclick="saveSettings()">Save URL</button>
+      <div id="sync-status" class="sync-status"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Data backup</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Export all your data as a JSON file.</p>
+      <button class="btn-secondary" onclick="exportData()">Export data backup</button>
+    </div>
+    <div class="card">
+      <div class="card-title">App info</div>
+      <div class="hist-row"><span>Version</span><span style="color:var(--text-secondary);">1.0.0</span></div>
+      <div class="hist-row"><span>Storage</span><span style="color:var(--text-secondary);">Local (on device)</span></div>
+      <div class="hist-row"><span>Offline</span><span style="color:var(--text-secondary);">Fully supported</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button id="nav-today" class="active" onclick="showSection('today')"><span class="nav-icon">&#9737;</span>Today</button>
+  <button id="nav-food" onclick="showSection('food')"><span class="nav-icon">&#9679;</span>Food</button>
+  <button id="nav-workout" onclick="showSection('workout')"><span class="nav-icon">&#9651;</span>Workout</button>
+  <button id="nav-checkin" onclick="showSection('checkin')"><span class="nav-icon">&#10003;</span>Check-in</button>
+  <button id="nav-weekly" onclick="showSection('weekly')"><span class="nav-icon">&#9636;</span>Weekly</button>
+  <button id="nav-progress" onclick="showSection('progress')"><span class="nav-icon">&#9650;</span>Progress</button>
+  <button id="nav-settings" onclick="showSection('settings')"><span class="nav-icon">&#9881;</span>Settings</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
