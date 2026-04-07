@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <base href="/fortaleza-tracker/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Hyrox">
+  <meta name="apple-mobile-web-app-title" content="Fortaleza">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1a1a18" media="(prefers-color-scheme: dark)">
-  <title>Ana Hyrox Coach</title>
+  <title>Fortaleza Tracker</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
@@ -22,10 +21,7 @@
     <p class="section-heading" id="today-heading">Today</p>
     <p class="section-sub" id="today-date"></p>
     <div id="today-alerts"></div>
-    <div class="card">
-      <div class="card-title">Session</div>
-      <div id="today-workout"></div>
-    </div>
+    <div class="card"><div class="card-title">Session</div><div id="today-workout"></div></div>
     <div class="card">
       <div class="card-title">Macros</div>
       <div id="macro-type-badge"></div>
@@ -37,162 +33,249 @@
   <div id="food" class="section">
     <p class="section-heading">Food</p>
     <p class="section-sub" id="food-date-label"></p>
+
+    <!-- Daily totals -->
     <div class="card"><div class="card-title">Daily totals</div><div id="food-totals"></div></div>
+
+    <!-- Search + add -->
     <div class="card">
-      <div class="card-title">Quick add</div>
-      <div class="quick-add-grid" id="quick-add-grid"></div>
-      <button class="btn-small" onclick="toggleCustomFood()" style="width:100%;">+ Custom food</button>
-      <div id="custom-food-form" style="display:none;margin-top:12px;">
+      <div class="card-title">Add food</div>
+
+      <!-- Search bar -->
+      <div style="position:relative;margin-bottom:10px;">
+        <input type="text" id="food-search" placeholder="Search your library or Open Food Facts..." oninput="onFoodSearch(this.value)" style="width:100%;padding:10px 36px 10px 12px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text);outline:none;font-family:inherit;">
+        <span id="food-search-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-secondary);">...</span>
+      </div>
+
+      <!-- Search results -->
+      <div id="food-search-results" style="display:none;margin-bottom:10px;max-height:240px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius-md);"></div>
+
+      <!-- Meal selector for manual add -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <select id="food-meal-select" style="font-size:12px;border:0.5px solid var(--border);border-radius:var(--radius-md);padding:5px 8px;background:var(--bg-secondary);color:var(--text);font-family:inherit;">
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="snack">Snack</option>
+          <option value="dinner">Dinner</option>
+          <option value="other">Other</option>
+        </select>
+        <button class="btn-small" onclick="toggleAddCustom()" style="flex:1;">+ Add custom food</button>
+        <button class="btn-small" onclick="showLibrary()" style="flex:1;">My library</button>
+      </div>
+
+      <!-- Custom food form -->
+      <div id="custom-food-form" style="display:none;border-top:0.5px solid var(--border);padding-top:10px;margin-top:4px;">
         <div class="metric-grid" style="margin-bottom:8px;">
-          <div class="metric" style="grid-column:1/-1;"><label>Food name</label><input type="text" id="cf-name" placeholder="e.g. Chicken breast"></div>
+          <div class="metric" style="grid-column:1/-1;"><label>Food name</label><input type="text" id="cf-name" placeholder="e.g. Homemade granola"></div>
           <div class="metric"><label>Protein (g)</label><input type="number" id="cf-p" placeholder="0"></div>
           <div class="metric"><label>Carbs (g)</label><input type="number" id="cf-c" placeholder="0"></div>
           <div class="metric"><label>Fat (g)</label><input type="number" id="cf-f" placeholder="0"></div>
-          <div class="metric"><label>Meal</label>
-            <select id="cf-meal" style="font-size:13px;font-family:inherit;">
-              <option value="breakfast">Breakfast</option>
-              <option value="lunch">Lunch</option>
-              <option value="snack">Snack</option>
-              <option value="dinner">Dinner</option>
-              <option value="other">Other</option>
+          <div class="metric" style="grid-column:1/-1;">
+            <label>Save to library?</label>
+            <select id="cf-save" style="font-size:13px;font-family:inherit;width:100%;background:transparent;border:none;outline:none;color:var(--text);">
+              <option value="yes">Yes — add to my library</option>
+              <option value="no">No — just log today</option>
             </select>
           </div>
         </div>
         <button class="btn-primary" onclick="addCustomFood()">Add food</button>
       </div>
     </div>
+
+    <!-- Library panel -->
+    <div id="library-panel" style="display:none;">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;">My food library</div>
+          <button class="btn-small" onclick="hideLibrary()">Close</button>
+        </div>
+        <input type="text" id="library-search" placeholder="Filter library..." oninput="filterLibrary(this.value)" style="width:100%;padding:8px 12px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text);outline:none;font-family:inherit;margin-bottom:10px;">
+        <div id="library-list"></div>
+        <p style="font-size:11px;color:var(--text-secondary);margin-top:10px;">Nutrition data from Open Food Facts (ODbL)</p>
+      </div>
+    </div>
+
+    <!-- Today's log -->
     <div class="card"><div class="card-title">Today's log</div><div id="food-log"></div></div>
   </div>
 
-  <!-- WORKOUT -->
-  <div id="workout" class="section">
-    <p class="section-heading">Workout log</p>
-    <p class="section-sub" id="workout-date-label"></p>
-    <div class="card">
-      <div class="card-title">Log results</div>
-      <div id="station-inputs"></div>
-      <button class="btn-primary" onclick="saveWorkout()">Save session</button>
+  <!-- WORKOUTS -->
+  <div id="workouts" class="section">
+    <p class="section-heading">Workouts</p>
+    <p class="section-sub" id="workout-week-label"></p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <button class="btn-small" onclick="shiftWeek(-1)">← Prev</button>
+      <button class="btn-small" onclick="shiftWeek(0)">This week</button>
+      <button class="btn-small" onclick="shiftWeek(1)">Next →</button>
     </div>
-    <div class="card"><div class="card-title">Recent sessions</div><div id="workout-history"></div></div>
+    <div id="week-grid"></div>
+    <div id="day-panel" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <button class="btn-small" onclick="closeDayPanel()">← Back</button>
+        <span id="day-panel-title" style="font-size:15px;font-weight:500;"></span>
+      </div>
+      <div class="card">
+        <div class="card-title">Programmed</div>
+        <div id="day-panel-programmed"></div>
+        <button class="btn-small" style="margin-top:8px;width:100%;" onclick="reassignDay()">Swap session to another day</button>
+      </div>
+      <div id="day-log-section" class="card">
+        <div class="card-title" id="day-log-title">Log results</div>
+        <div id="station-inputs"></div>
+        <button id="workout-save-btn" class="btn-primary" onclick="saveWorkout()">Save session</button>
+        <button id="workout-cancel-btn" class="btn-secondary" onclick="cancelEditWorkout()" style="display:none;margin-top:6px;">Cancel</button>
+      </div>
+    </div>
+    <div id="swap-panel" style="display:none;" class="card">
+      <div class="card-title">Swap session</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Move <strong id="swap-from-label"></strong> to:</p>
+      <div id="swap-targets"></div>
+      <button class="btn-secondary" style="margin-top:8px;" onclick="closeSwap()">Cancel</button>
+    </div>
   </div>
 
-  <!-- CHECK-IN -->
-  <div id="checkin" class="section">
-    <p class="section-heading">Daily check-in</p>
-    <p class="section-sub">~60 seconds</p>
-    <div class="card">
-      <div class="card-title">Body & recovery</div>
-      <div class="metric-grid">
-        <div class="metric"><label>Weight (kg)</label><input type="number" id="ci-weight" step="0.1" placeholder="62.9"></div>
-        <div class="metric"><label>Cycle day</label><input type="number" id="ci-cycle" min="1" max="35" placeholder="1"></div>
-        <div class="metric"><label>HRV (ms)</label><input type="number" id="ci-hrv" placeholder="69"></div>
-        <div class="metric"><label>RHR (bpm)</label><input type="number" id="ci-rhr" placeholder="48"></div>
-        <div class="metric"><label>Body Battery</label><input type="number" id="ci-bb" min="0" max="100" placeholder="96"></div>
-        <div class="metric"><label>Stress score</label><input type="number" id="ci-stress" placeholder="19"></div>
-        <div class="metric"><label>Sleep score</label><input type="number" id="ci-sleep" placeholder="78"></div>
-        <div class="metric"><label>Deep sleep (%)</label><input type="number" id="ci-deep" placeholder="20"></div>
-      </div>
-      <div class="slider-row">
-        <label>Steps</label>
-        <input type="range" id="ci-steps" min="2000" max="20000" step="500" value="8000" oninput="document.getElementById('steps-val').textContent=Math.round(this.value/500)*500>=1000?(Math.round(this.value/500)*500/1000).toFixed(1)+'k':this.value">
-        <span class="slider-val" id="steps-val">8k</span>
-      </div>
+  <!-- STATS -->
+  <div id="stats" class="section">
+    <p class="section-heading">Stats</p>
+    <p class="section-sub" id="stats-date"></p>
+    <div class="collapsible-header" onclick="toggleCollapse('checkin-body')" id="checkin-header">
+      <span>Daily check-in</span><span class="collapse-arrow" id="checkin-arrow">▾</span>
     </div>
-    <div class="card">
-      <div class="card-title">How do you feel?</div>
-      <div class="slider-row">
-        <label>Energy</label>
-        <input type="range" id="ci-energy" min="1" max="10" step="1" value="7" oninput="document.getElementById('energy-val').textContent=this.value">
-        <span class="slider-val" id="energy-val">7</span>
-      </div>
-      <div class="slider-row">
-        <label>Hunger</label>
-        <input type="range" id="ci-hunger" min="1" max="10" step="1" value="5" oninput="document.getElementById('hunger-val').textContent=this.value">
-        <span class="slider-val" id="hunger-val">5</span>
-      </div>
-      <div style="margin-top:4px;">
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Training performance</p>
-        <div class="perf-btns">
-          <button class="perf-btn" id="perf-pr" onclick="selectPerf('pr')">PR</button>
-          <button class="perf-btn selected" id="perf-normal" onclick="selectPerf('normal')">Normal</button>
-          <button class="perf-btn" id="perf-below" onclick="selectPerf('below')">Below par</button>
-          <button class="perf-btn" id="perf-rest" onclick="selectPerf('rest')">Rest day</button>
+    <div id="checkin-body" class="collapsible-body">
+      <div class="card">
+        <div class="card-title">Body & recovery</div>
+        <div class="metric-grid">
+          <div class="metric"><label>Weight (kg)</label><input type="number" id="ci-weight" step="0.1" placeholder="62.9"></div>
+          <div class="metric"><label>Cycle day</label><input type="number" id="ci-cycle" min="1" max="35" placeholder="1"></div>
+          <div class="metric"><label>HRV (ms)</label><input type="number" id="ci-hrv" placeholder="69"></div>
+          <div class="metric"><label>RHR (bpm)</label><input type="number" id="ci-rhr" placeholder="48"></div>
+          <div class="metric"><label>Body Battery</label><input type="number" id="ci-bb" min="0" max="100" placeholder="96"></div>
+          <div class="metric"><label>Stress score</label><input type="number" id="ci-stress" placeholder="19"></div>
+          <div class="metric"><label>Sleep score</label><input type="number" id="ci-sleep" placeholder="78"></div>
+          <div class="metric"><label>Deep sleep (%)</label><input type="number" id="ci-deep" placeholder="20"></div>
+        </div>
+        <div class="slider-row">
+          <label>Steps</label>
+          <input type="range" id="ci-steps" min="2000" max="20000" step="500" value="8000" oninput="document.getElementById('steps-val').textContent=(Math.round(this.value/1000*10)/10)+'k'">
+          <span class="slider-val" id="steps-val">8k</span>
         </div>
       </div>
-    </div>
-    <button class="btn-primary" onclick="saveCheckin()">Save check-in</button>
-  </div>
-
-  <!-- WEEKLY -->
-  <div id="weekly" class="section">
-    <p class="section-heading">Weekly review</p>
-    <p class="section-sub" id="weekly-sub"></p>
-    <div id="weekly-summary"></div>
-    <div class="card">
-      <div class="card-title">Measurements (cm)</div>
-      <div class="measurements-grid">
-        <div class="meas-item"><label>Waist</label><input type="number" id="m-waist" step="0.5" placeholder="70"></div>
-        <div class="meas-item"><label>Thigh</label><input type="number" id="m-thigh" step="0.5" placeholder="55"></div>
-        <div class="meas-item"><label>Glutes</label><input type="number" id="m-glutes" step="0.5" placeholder="96"></div>
-        <div class="meas-item"><label>Arm</label><input type="number" id="m-arm" step="0.5" placeholder="28"></div>
+      <div class="card">
+        <div class="card-title">How do you feel?</div>
+        <div class="slider-row">
+          <label>Energy</label>
+          <input type="range" id="ci-energy" min="1" max="10" step="1" value="7" oninput="document.getElementById('energy-val').textContent=this.value">
+          <span class="slider-val" id="energy-val">7</span>
+        </div>
+        <div class="slider-row">
+          <label>Hunger</label>
+          <input type="range" id="ci-hunger" min="1" max="10" step="1" value="5" oninput="document.getElementById('hunger-val').textContent=this.value">
+          <span class="slider-val" id="hunger-val">5</span>
+        </div>
+        <div style="margin-top:4px;">
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Training performance</p>
+          <div class="perf-btns">
+            <button class="perf-btn" id="perf-pr" onclick="selectPerf('pr')">PR</button>
+            <button class="perf-btn selected" id="perf-normal" onclick="selectPerf('normal')">Normal</button>
+            <button class="perf-btn" id="perf-below" onclick="selectPerf('below')">Below par</button>
+            <button class="perf-btn" id="perf-rest" onclick="selectPerf('rest')">Rest day</button>
+          </div>
+        </div>
       </div>
+      <button id="checkin-save-btn" class="btn-primary" onclick="saveCheckin()">Save check-in</button>
+      <button id="checkin-cancel-btn" class="btn-secondary" onclick="cancelEditCheckin()" style="display:none;margin-top:6px;">Cancel edit</button>
+      <div class="card" style="margin-top:1rem;"><div class="card-title">History</div><div id="checkin-history"></div></div>
     </div>
-    <div id="algorithm-recommendation"></div>
-    <button class="btn-primary" onclick="saveWeekly()">Confirm & save</button>
-  </div>
 
-  <!-- PROGRESS -->
-  <div id="progress" class="section">
-    <p class="section-heading">Progress</p>
-    <p class="section-sub">Trends over time</p>
-    <div class="metric-grid" style="margin-bottom:1rem;">
-      <div class="metric"><label>7-day avg weight</label><div class="stat-num" id="prog-weight">—</div><div class="stat-label">kg</div></div>
-      <div class="metric"><label>4-week change</label><div class="stat-num" id="prog-change">—</div><div class="stat-label">kg</div></div>
+    <div class="collapsible-header" onclick="toggleCollapse('weekly-body')" id="weekly-header" style="margin-top:8px;">
+      <span>Weekly review</span><span class="collapse-arrow" id="weekly-arrow">▸</span>
     </div>
-    <div class="card"><div class="card-title">Weight trend</div><canvas id="weight-chart" height="120"></canvas></div>
-    <div class="card"><div class="card-title">Station PBs</div><div id="station-pbs"></div></div>
-    <div class="card"><div class="card-title">Measurements</div><div id="meas-history"></div></div>
-    <div class="card"><div class="card-title">Algorithm status</div><div id="algo-status"></div></div>
+    <div id="weekly-body" class="collapsible-body" style="display:none;">
+      <div id="weekly-summary"></div>
+      <div class="card">
+        <div class="card-title">Measurements (cm)</div>
+        <div class="measurements-grid">
+          <div class="meas-item"><label>Waist</label><input type="number" id="m-waist" step="0.5" placeholder="70"></div>
+          <div class="meas-item"><label>Thigh</label><input type="number" id="m-thigh" step="0.5" placeholder="55"></div>
+          <div class="meas-item"><label>Glutes</label><input type="number" id="m-glutes" step="0.5" placeholder="96"></div>
+          <div class="meas-item"><label>Arm</label><input type="number" id="m-arm" step="0.5" placeholder="28"></div>
+        </div>
+      </div>
+      <div id="algorithm-recommendation"></div>
+      <button class="btn-primary" onclick="saveWeekly()">Confirm & save</button>
+    </div>
+
+    <div class="collapsible-header" onclick="toggleCollapse('progress-body')" id="progress-header" style="margin-top:8px;">
+      <span>Progress</span><span class="collapse-arrow" id="progress-arrow">▸</span>
+    </div>
+    <div id="progress-body" class="collapsible-body" style="display:none;">
+      <div class="metric-grid" style="margin-bottom:1rem;">
+        <div class="metric"><label>7-day avg weight</label><div class="stat-num" id="prog-weight">—</div><div class="stat-label">kg</div></div>
+        <div class="metric"><label>4-week change</label><div class="stat-num" id="prog-change">—</div><div class="stat-label">kg</div></div>
+      </div>
+      <div class="card"><div class="card-title">Weight trend</div><canvas id="weight-chart" height="120"></canvas></div>
+      <div class="card"><div class="card-title">Station PBs</div><div id="station-pbs"></div></div>
+      <div class="card"><div class="card-title">Measurements</div><div id="meas-history"></div></div>
+      <div class="card"><div class="card-title">Algorithm status</div><div id="algo-status"></div></div>
+    </div>
   </div>
 
   <!-- SETTINGS -->
   <div id="settings" class="section">
     <p class="section-heading">Settings</p>
-    <p class="section-sub">Sync & data</p>
-    <div class="card">
-      <div class="card-title">Google Sheets sync</div>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Paste your Apps Script web app URL here to sync data automatically.</p>
-      <input type="text" id="sheets-url-input" placeholder="https://script.google.com/macros/s/..." style="width:100%;padding:10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text);outline:none;font-family:inherit;margin-bottom:8px;">
-      <button class="btn-primary" onclick="saveSettings()">Save URL</button>
-      <div id="sync-status" class="sync-status"></div>
+    <p class="section-sub">Plan, sync & data</p>
+    <div class="collapsible-header" onclick="toggleCollapse('plan-body')" id="plan-header">
+      <span>Edit plan</span><span class="collapse-arrow" id="plan-arrow">▸</span>
     </div>
-    <div class="card">
-      <div class="card-title">Data backup</div>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Export all your data as a JSON file.</p>
-      <button class="btn-secondary" onclick="exportData()">Export data backup</button>
+    <div id="plan-body" class="collapsible-body" style="display:none;">
+      <div id="plan-editor"></div>
+      <div class="card">
+        <div class="card-title">Station log fields</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Rename or reorder stations used in the workout log.</p>
+        <div id="station-editor"></div>
+        <button class="btn-small" style="margin-top:8px;width:100%;" onclick="resetStations()">Reset stations to default</button>
+      </div>
+      <button class="btn-primary" onclick="savePlanAndStations()">Save all changes</button>
+      <button class="btn-secondary" onclick="resetPlan()">Reset plan to default</button>
     </div>
-    <div class="card">
-      <div class="card-title">App info</div>
-      <div class="hist-row"><span>Version</span><span style="color:var(--text-secondary);">1.0.0</span></div>
-      <div class="hist-row"><span>Storage</span><span style="color:var(--text-secondary);">Local (on device)</span></div>
-      <div class="hist-row"><span>Offline</span><span style="color:var(--text-secondary);">Fully supported</span></div>
+    <div class="collapsible-header" onclick="toggleCollapse('sheets-body')" id="sheets-header" style="margin-top:8px;">
+      <span>Google Sheets sync</span><span class="collapse-arrow" id="sheets-arrow">▸</span>
+    </div>
+    <div id="sheets-body" class="collapsible-body" style="display:none;">
+      <div class="card">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Paste your Apps Script web app URL to sync automatically.</p>
+        <input type="text" id="sheets-url-input" placeholder="https://script.google.com/macros/s/...exec" style="width:100%;padding:10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text);outline:none;font-family:inherit;margin-bottom:8px;">
+        <button class="btn-primary" onclick="saveSettings()">Save URL</button>
+        <div id="sync-status" class="sync-status"></div>
+      </div>
+    </div>
+    <div class="collapsible-header" onclick="toggleCollapse('data-body')" id="data-header" style="margin-top:8px;">
+      <span>Data & backup</span><span class="collapse-arrow" id="data-arrow">▸</span>
+    </div>
+    <div id="data-body" class="collapsible-body" style="display:none;">
+      <div class="card">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Export all your data as a JSON file.</p>
+        <button class="btn-secondary" onclick="exportData()">Export backup</button>
+        <div style="margin-top:12px;font-size:11px;color:var(--text-secondary);line-height:1.5;">
+          Version 5.0.0 · Local storage · Offline supported<br>
+          Food data: <a href="https://openfoodfacts.org" style="color:var(--text-secondary);">Open Food Facts</a> (ODbL licence)
+        </div>
+      </div>
     </div>
   </div>
 
 </div>
 
-<!-- BOTTOM NAV -->
 <nav class="nav">
-  <button id="nav-today" class="active" onclick="showSection('today')"><span class="nav-icon">&#9737;</span>Today</button>
-  <button id="nav-food" onclick="showSection('food')"><span class="nav-icon">&#9679;</span>Food</button>
-  <button id="nav-workout" onclick="showSection('workout')"><span class="nav-icon">&#9651;</span>Workout</button>
-  <button id="nav-checkin" onclick="showSection('checkin')"><span class="nav-icon">&#10003;</span>Check-in</button>
-  <button id="nav-weekly" onclick="showSection('weekly')"><span class="nav-icon">&#9636;</span>Weekly</button>
-  <button id="nav-progress" onclick="showSection('progress')"><span class="nav-icon">&#9650;</span>Progress</button>
-  <button id="nav-settings" onclick="showSection('settings')"><span class="nav-icon">&#9881;</span>Settings</button>
+  <button id="nav-today"    class="active" onclick="showSection('today')"   ><span class="nav-icon">&#9737;</span>Today</button>
+  <button id="nav-food"                    onclick="showSection('food')"    ><span class="nav-icon">&#9679;</span>Food</button>
+  <button id="nav-workouts"                onclick="showSection('workouts')"><span class="nav-icon">&#9651;</span>Workouts</button>
+  <button id="nav-stats"                   onclick="showSection('stats')"   ><span class="nav-icon">&#9650;</span>Stats</button>
+  <button id="nav-settings"                onclick="showSection('settings')"><span class="nav-icon">&#8942;</span>Settings</button>
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="foods-starter.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
